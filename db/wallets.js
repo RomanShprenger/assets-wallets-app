@@ -45,6 +45,17 @@ export const selectWallets = () => {
   });
 }
 
+export const selectWalletByAddress = (address) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(`select * from wallets where address = '${address}'`, [], (_, { rows }) => {
+        resolve(rows._array[0]),
+        (_, error) => reject(error)
+      });
+    }, reject);
+  });
+}
+
 export const saveWallets = (wallets) => {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {

@@ -19,11 +19,11 @@ export const recreateBalanciesDB = () => {
   });
 };
 
-export function saveBalancies(balances) {
+export function saveBalancies(balancies) {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {
       tx.executeSql(
-        `insert into balancies (address, chain, value) values ${balances
+        `insert into balancies (address, chain, value) values ${balancies
           .map(
             item =>
               `("${item.address}", "${item.chain}", "${item.value}")`

@@ -13,6 +13,7 @@ import {
 } from "../db";
 
 export const getWallets = async () => {
+    // await recreateWalletsDB();
     await createWalletsTable();
     const walletsFromDb = await selectWallets();
 
@@ -20,6 +21,7 @@ export const getWallets = async () => {
 }
 
 export const getPortfolio = async () => {
+    const walletsFromDb = await getWallets();
     recreatePortfolioDB();
     const positionsData = await fetchWalletPositions(walletsFromDb?.map(wallet => wallet.address));
     if (positionsData.length) {
@@ -31,17 +33,17 @@ export const getPortfolio = async () => {
 }
 
 export const getBalancies = async () => {
+    const walletsFromDb = await getWallets();
     recreateBalanciesDB();
     walletsFromDb.forEach(async (wallet) => {
         const walletData = await getWalletBalance(wallet.address);
-        addWallet({ ...wallet, total: walletData?.data?.attributes?.total?.positions || 0 });
         const { positions_distribution_by_chain = {} } = walletData?.data?.attributes;
         if (positions_distribution_by_chain) {
-            const positionsByChain = Object.keys(positions_distribution_by_chain).reduce((
-                (accumulator, currentValue) => accumulator.push({ chain: currentValue, value: positionsByChain[currentValue], address: walletData.address }),
-                []
-            ));
-            saveBalancies(positionsByChain);
+            const positionsByChain = Object.keys(positions_distribution_by_chain).reduce((accumulator, currentValue) => {
+                accumulator.push({ chain: currentValue, value: positions_distribution_by_chain[currentValue], address: wallet.address });
+                return accumulator;
+            }, []);
+            positionsByChain.length > 0 && saveBalancies(positionsByChain);
         }
     });
 

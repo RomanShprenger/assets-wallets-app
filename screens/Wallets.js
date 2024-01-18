@@ -57,7 +57,7 @@ export const Wallets = ({ navigation }) => {
                 data.length ? (
                     <ScrollView className="flex flex-1 px-4 w-full">
                         {
-                            data.map((item) => <Wallet data={item} key={item.address} editable={editable} deleteWalletFromDbAndList={deleteWalletFromDbAndList} />)
+                            data.map((item) => <Wallet data={item} key={item.address} editable={editable} deleteWalletFromDbAndList={deleteWalletFromDbAndList} navigation={navigation} />)
                         }
                     </ScrollView>
                 ) : (

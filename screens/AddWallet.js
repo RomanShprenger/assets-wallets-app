@@ -3,7 +3,7 @@ import PageTitle from "../components/PageTitle";
 import { View, Text, KeyboardAvoidingView, Platform, TextInput, Pressable, ScrollView, Alert } from "react-native";
 import { addWallet } from "../db";
 import { getWalletBalance } from '../services/zerionApi';
-import { getPortfolio, getBalancies } from '../services/getData';
+import { getWallets, getPortfolio, getBalancies } from '../services/getData';
 
 export const AddWallet = ({ navigation }) => {
     const [wallet, setWallet] = useState({
@@ -19,6 +19,11 @@ export const AddWallet = ({ navigation }) => {
     };
 
     const submit = async () => {
+        const walletsFromDb = await getWallets();
+        if (walletsFromDb.filter(item => item.address === wallet.address).length > 0) {
+            Alert.alert("A wallet with the same address already exists in your list");
+            return;
+        }
         const walletData = await getWalletBalance(wallet.address);
         if (walletData?.data) {
             addWallet({ ...wallet, total: walletData?.data?.attributes?.total?.positions || 0 });
@@ -39,7 +44,7 @@ export const AddWallet = ({ navigation }) => {
 
     return (
         <KeyboardAvoidingView
-            className="flex flex-1 bg-neutral-900 pt-4 justify-start items-start"
+            className="flex flex-1 bg-secondary-100 pt-4 justify-start items-start"
             behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
             <View className="flex p-4 flex-col justify-center w-full mb-4">
@@ -53,7 +58,7 @@ export const AddWallet = ({ navigation }) => {
                         Name
                     </Text>
                     <TextInput
-                        className="bg-neutral-800 px-4 py-4 rounded-2xl text-primary-100"
+                        className="bg-neutral-800 px-4 py-4 rounded-2xl text-primary-200"
                         value={wallet.name}
                         onChangeText={(newValue) => updateWallet("name", newValue)}
                         placeholder={"My new wallet"}
@@ -66,7 +71,7 @@ export const AddWallet = ({ navigation }) => {
                         Address
                     </Text>
                     <TextInput
-                        className="bg-neutral-800 px-4 py-4 rounded-2xl text-primary-100"
+                        className="bg-neutral-800 px-4 py-4 rounded-2xl text-primary-200"
                         value={wallet.address}
                         onChangeText={(newValue) => updateWallet("address", newValue)}
                         placeholder={"e.g. 0x0....000"}

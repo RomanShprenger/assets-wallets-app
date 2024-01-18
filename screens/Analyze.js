@@ -6,47 +6,42 @@ import { useFocusEffect } from '@react-navigation/native';
 import * as SplashScreen from "expo-splash-screen";
 import { selectWallets, selectPortfolio, selectBalancies } from "../db";
 import SwitchSelector from "react-native-switch-selector";
-import { PieChart } from "react-native-gifted-charts";
-import { randomColor } from "../utils";
+import { Chart } from '../components/Chart';
+import { randomColor, roundToCents } from "../utils";
 
-const Dot = ({ color }) => {
-  return (
-    <View
-      style={{
-        height: 10,
-        width: 10,
-        borderRadius: 5,
-        backgroundColor: color
-      }}
-    />
-  );
-};
 
 export const Analyze = () => {
   const [wallets, setWallets] = useState([]);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [switcherState, setSwitcherState] = useState('assets');
   const [chartData, setChartData] = useState([]);
-  const [activeChartItem, setActiveChartItem] = useState(null);
+  const [chartBalanciesData, setChartBalanciesData] = useState([]);
 
   const loadPositions = async () => {
     try {
       const walletsFromDb = await selectWallets();
       setWallets(walletsFromDb);
 
-      const balancies = await selectBalancies();
-
-      console.log("BALANCIES FOR ANALYZE: ", balancies);
+      const balanciesFromDb = await selectBalancies();
 
       const savedPositions = await selectPortfolio();
-      const sumWithInitial = savedPositions?.reduce((accumulator, currentValue) => accumulator + currentValue.value, 0);
-      // setPositions(savedPositions);
+      const sumOfPositions = savedPositions?.reduce((accumulator, currentValue) => accumulator + currentValue.value, 0);
       setChartData(savedPositions.map(item => ({
         value: item.value,
         color: randomColor(),
-        text: Math.round((item.value / sumWithInitial) * 100) + '%',
+        text: Math.round((item.value / sumOfPositions) * 100) + '%',
         symbol: item.symbol,
         name: item.name
+      })));
+
+      const sumOfBalancies = balanciesFromDb?.reduce((accumulator, currentValue) => accumulator + currentValue.value, 0);
+      setChartBalanciesData(balanciesFromDb.map(item => ({
+        value: item.value,
+        color: randomColor(),
+        text: Math.round((item.value / sumOfBalancies) * 100) + '%',
+        symbol: item.chain,
+        name: item.chain,
+        value: item.value
       })));
 
       setDataLoaded(true);
@@ -72,7 +67,7 @@ export const Analyze = () => {
   }
 
   return (
-    <View
+    <ScrollView
       className="flex flex-1 bg-secondary-100 pt-12 px-4"
       onLayout={onLayoutRootView}
     >
@@ -83,8 +78,8 @@ export const Analyze = () => {
       </View>
 
       {
-        wallets.length ? <ScrollView
-        className="flex flex-1 bg-secondary-100 pt-12 px-4"
+        wallets.length ? <View
+        className="flex flex-1 bg-secondary-100 mb-12"
         onLayout={onLayoutRootView}
       >
           <SwitchSelector
@@ -104,80 +99,27 @@ export const Analyze = () => {
           />
 
           {
-            switcherState === 'assets' && (
-              <View className="mx-auto flex flex-col items-center justify-center border border-primary-100 p-4 pb-12 mb-12 rounded-2xl">
-                <PieChart
-                  data={chartData}
-                  focusOnPress
-                  donut
-                  sectionAutoFocus
-                  innerCircleColor="#171717"
-                  onPress={(item) => setActiveChartItem(item)}
-                  centerLabelComponent={() => {
-                    return activeChartItem && (
-                      <View className="flex flex-col items-center jusitfy-center">
-                        <Text className="text-white text-lg font-semibold mb-1">{activeChartItem?.text}</Text>
-                        <Text className="text-white text-xs">{activeChartItem?.symbol}</Text>
-                      </View>
-                    );
-                  }}
-                />
-
-                <View className="flex flex-row flex-wrap justify-center gap-x-4 gap-y-4">
-                  {
-                    chartData.map(item => (
-                      <View className="flex flex-row gap-x-2 items-center" key={item?.color}>
-                        <Dot color={item?.color} />
-                        <Text className="text-white text-md">{item?.name}</Text>
-                        <Text className="text-white text-md font-semibold">{item?.text}</Text>
-                      </View>
-                    ))
-                  }
-                </View>
-              </View>
-            )
+            switcherState === 'assets' && <Chart data={chartData} />
           }
-
           {
-            switcherState === 'chains' && (
-              <View className="mx-auto flex flex-col items-center justify-center bg-neutral-800 p-4 pb-12 mb-12 rounded-2xl">
-                <PieChart
-                  data={chartData}
-                  focusOnPress
-                  donut
-                  sectionAutoFocus
-                  innerCircleColor="#171717"
-                  onPress={(item) => setActiveChartItem(item)}
-                  centerLabelComponent={() => {
-                    return activeChartItem && (
-                      <View className="flex flex-col items-center jusitfy-center">
-                        <Text className="text-white text-lg font-semibold mb-1">{activeChartItem?.text}</Text>
-                        <Text className="text-white text-xs">{activeChartItem?.symbol}</Text>
-                      </View>
-                    );
-                  }}
-                />
-
-                <View className="flex flex-row flex-wrap justify-center gap-x-4 gap-y-4">
-                  {
-                    chartData.map(item => (
-                      <View className="flex flex-row gap-x-2 items-center" key={item?.color}>
-                        <Dot color={item?.color} />
-                        <Text className="text-white text-md">{item?.name}</Text>
-                        <Text className="text-white text-md font-semibold">{item?.text}</Text>
-                      </View>
-                    ))
-                  }
-                </View>
+            switcherState === 'chains' && <View>
+              <Chart data={chartBalanciesData} />
+              <View className="flex flex-col gap-y-2 px-4">
+                {chartBalanciesData.map(item => (
+                  <View className="flex flex-row justify-between items-center" key={item.name}>
+                    <Text className="text-white text-center text-lg font-semibold">{item.name}</Text>
+                    <Text className="text-primary-200 text-center text-base">${roundToCents(item.value)}</Text>
+                  </View>
+                ))}
               </View>
-            )
+            </View>
           }
-        </ScrollView> : <>
+        </View> : <>
           <View className="flex-1 pt-2 px-6 px-8 flex flex-col items-center justify-center w-full rounded-t-2xl">
             <Text className="text-white opacity-40 text-center text-2xl font-semibold">No data for analyze</Text>
           </View>
         </>
       }
-    </View>
+    </ScrollView>
   );
 };

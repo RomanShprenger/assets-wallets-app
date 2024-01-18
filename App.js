@@ -3,6 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AddWallet } from "./screens/AddWallet";
 import { Home } from "./screens/Home";
+import { Wallet } from "./screens/Wallet";
 import { SplashScreen } from "./screens/SplashScreen";
 import { StatusBar } from "expo-status-bar";
 
@@ -27,19 +28,13 @@ export default function App({ navigation }) {
   );
 
   const loadData = async () => {
-    const walletsFromDb = await getWallets()
+    await getWallets();
     dispatch({ type: "increment" });
 
-    const positionsFromDb = await getPortfolio();
+    await getPortfolio();
     dispatch({ type: "increment" });
 
-    const balanciedFromDb = await getBalancies();
-    dispatch({ type: "increment" });
-
-    console.log("WALLETS: ", walletsFromDb);
-    console.log("POSITIONS: ", positionsFromDb);
-    console.log("BALANCIES: ", balanciedFromDb);
-
+    await getBalancies();
     dispatch({ type: "increment" });
   }
 
@@ -47,8 +42,8 @@ export default function App({ navigation }) {
     loadData();
   }, []);
 
-  if (state.loadingStatus < 4) {
-    return <SplashScreen />;
+  if (state.loadingStatus < 3) {
+    return <SplashScreen status={state.loadingStatus} />;
   }
 
   return (
@@ -69,12 +64,24 @@ export default function App({ navigation }) {
                   title: "",
                   headerShown: true,
                   headerStyle: {
-                    backgroundColor: '#171717',
+                    backgroundColor: '#021A29',
                   },
                   headerTintColor: '#fff',
                 }}
               />
-            </>           
+              <Stack.Screen
+                name="Wallet"
+                component={Wallet}
+                options={{
+                  title: "",
+                  headerShown: true,
+                  headerStyle: {
+                    backgroundColor: '#021A29',
+                  },
+                  headerTintColor: '#fff',
+                }}
+              />
+            </>
         </Stack.Navigator>
       </NavigationContainer>
     </>

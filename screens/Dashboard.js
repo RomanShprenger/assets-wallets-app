@@ -91,7 +91,7 @@ export const Dashboard = ({ navigation }) => {
             keyExtractor={item => item.symbol}
           />
         </> : <>
-          <View className="flex-1 bg-white pt-2 px-6 px-8 flex flex-col items-center justify-center w-full rounded-t-2xl">
+          <View className="flex-1 bg-white pt-2 px-8 flex flex-col items-center justify-center w-full rounded-t-2xl">
             <Text className="text-neutral-800 text-center text-3xl font-semibold">Add your first wallet to get a list of assets</Text>
             <Pressable
               className="flex bg-primary-200 items-center justify-center p-4 my-4 rounded-2xl"
